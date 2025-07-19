@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Insight Advisor</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="container py-16">
+      <div class="flex justify-between items-center gap-16 mb-8">
+        <h1>Crypto Insight Advisor</h1>
+        <div class="flex items-center gap-8">
+          <span id="lastUpdated" class="status status--info">Зареждане...</span>
+          <button id="refreshBtn" class="btn btn--primary btn--sm" title="Обнови данните">
+            ↻ Обнови
+          </button>
+        </div>
+      </div>
+      
+      <!-- Tab Navigation -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="technical">Технически анализ</button>
+        <button class="tab-btn" data-tab="fundamental">Фундаментален анализ</button>
+        <button class="tab-btn" data-tab="news">Пазарни новини</button>
+      </nav>
+    </header>
+
+    <main class="container">
+      <!-- Market Overview Dashboard -->
+      <section class="dashboard-overview mb-16">
+        <div class="dashboard-grid">
+          <div class="card dashboard-card">
+            <div class="card__body">
+              <h3>Индекс Страх/Алчност</h3>
+              <div class="flex items-center gap-16">
+                <canvas id="fngGauge" width="120" height="80"></canvas>
+                <div>
+                  <div class="metric-value" id="fngValue">--</div>
+                  <div class="metric-label" id="fngText">Зареждане...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card dashboard-card">
+            <div class="card__body">
+              <h3>Обща пазарна капитализация</h3>
+              <div class="metric-value" id="totalMarketCap">--</div>
+              <div class="metric-label">USD</div>
+            </div>
+          </div>
+          
+          <div class="card dashboard-card">
+            <div class="card__body">
+              <h3>24h Обем</h3>
+              <div class="metric-value" id="totalVolume">--</div>
+              <div class="metric-label">USD</div>
+            </div>
+          </div>
+          
+          <div class="card dashboard-card">
+            <div class="card__body">
+              <h3>BTC Доминиране</h3>
+              <div class="metric-value" id="btcDominance">--</div>
+              <div class="metric-label">%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        
+        <!-- Technical Analysis Tab -->
+        <div id="technical-tab" class="tab-panel active">
+          <div class="flex gap-16 mb-16 flex-wrap">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="onlyBuyCheckbox" />
+              <span>Покажи само BUY сигнали</span>
+            </label>
+          </div>
+          
+          <div class="card">
+            <div class="card__body">
+              <div class="table-responsive">
+                <table id="technicalTable" class="analysis-table">
+                  <thead>
+                    <tr>
+                      <th>Монета</th>
+                      <th>Цена</th>
+                      <th>24h %</th>
+                      <th class="tooltip-header">
+                        RSI
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            RSI (14): Momentum осцилатор<br>
+                            &lt; 30: Препродаден (BUY)<br>
+                            &gt; 70: Пренакупен (SELL)<br>
+                            30-70: HOLD
+                          </div>
+                        </div>
+                      </th>
+                      <th class="tooltip-header">
+                        MACD
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            MACD Signal: Тренд индикатор<br>
+                            BUY: Линия над сигнала<br>
+                            SELL: Линия под сигнала<br>
+                            Проследява momentum промени
+                          </div>
+                        </div>
+                      </th>
+                      <th class="tooltip-header">
+                        Stoch
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            Stochastic (14,3,3)<br>
+                            &lt; 20: Препродаден (BUY)<br>
+                            &gt; 80: Пренакупен (SELL)<br>
+                            Momentum осцилатор
+                          </div>
+                        </div>
+                      </th>
+                      <th class="tooltip-header">
+                        BB%
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            Bollinger Bands %B<br>
+                            &lt; 0: Под долна лента (BUY)<br>
+                            &gt; 1: Над горна лента (SELL)<br>
+                            0.2-0.8: HOLD зона
+                          </div>
+                        </div>
+                      </th>
+                      <th class="tooltip-header">
+                        Williams %R
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            Williams %R (14)<br>
+                            &gt; -20: Пренакупен (SELL)<br>
+                            &lt; -80: Препродаден (BUY)<br>
+                            Momentum индикатор
+                          </div>
+                        </div>
+                      </th>
+                      <th class="combined-signal">Общ сигнал</th>
+                    </tr>
+                  </thead>
+                  <tbody id="technicalTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fundamental Analysis Tab -->
+        <div id="fundamental-tab" class="tab-panel">
+          <div class="card">
+            <div class="card__body">
+              <div class="table-responsive">
+                <table id="fundamentalTable" class="analysis-table">
+                  <thead>
+                    <tr>
+                      <th>Монета</th>
+                      <th>Market Cap</th>
+                      <th class="tooltip-header">
+                        Vol/MCap
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            Volume/Market Cap Ratio<br>
+                            &gt; 0.15: Отлична ликвидност<br>
+                            0.1-0.15: Добра ликвидност<br>
+                            &lt; 0.05: Слаба ликвидност
+                          </div>
+                        </div>
+                      </th>
+                      <th class="tooltip-header">
+                        ATH Distance
+                        <div class="tooltip">
+                          <span class="tooltip-icon">?</span>
+                          <div class="tooltip-content">
+                            Разстояние от All Time High<br>
+                            &gt; 70%: Голяма отстъпка (възможност)<br>
+                            50-70%: Отстъпка<br>
+                            &lt; 10%: Близо до ATH (риск)
+                          </div>
+                        </div>
+                      </th>
+                      <th>30d %</th>
+                      <th>Fundamental Score</th>
+                      <th>Препоръка</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fundamentalTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Market News Tab -->
+        <div id="news-tab" class="tab-panel">
+          <div class="news-grid">
+            <div class="card">
+              <div class="card__header">
+                <h3>🔥 Популярни монети</h3>
+              </div>
+              <div class="card__body">
+                <div id="trendingCoins" class="trending-list">
+                  <div class="loading-placeholder">Зареждане...</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card__header">
+                <h3>📈 Най-големи печеливши (24h)</h3>
+              </div>
+              <div class="card__body">
+                <div id="topGainers" class="gainers-list">
+                  <div class="loading-placeholder">Зареждане...</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card__header">
+                <h3>📉 Най-големи губещи (24h)</h3>
+              </div>
+              <div class="card__body">
+                <div id="topLosers" class="losers-list">
+                  <div class="loading-placeholder">Зареждане...</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card__header">
+                <h3>💹 Обемни скокове</h3>
+              </div>
+              <div class="card__body">
+                <div id="volumeSpikes" class="volume-spikes-list">
+                  <div class="loading-placeholder">Зареждане...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Детайли</h3>
+          <button id="closeModal" class="btn btn--outline btn--sm">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="charts-container">
+            <canvas id="priceChart" height="200"></canvas>
+            <canvas id="indicatorsChart" height="200"></canvas>
+          </div>
+          <div id="modalFundamentals"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="spinner" class="spinner-overlay" style="display: none;">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="spinner-text">Зареждане на данни...</div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <footer class="disclaimer">
+      <p>
+        ⚠️ Това приложение е само за образователни цели и не представлява инвестиционен съвет. 
+        Винаги направете собствено проучване преди инвестиране.
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
